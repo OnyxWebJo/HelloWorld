@@ -1,0 +1,34 @@
+name: jordan_tourism_app
+[cite_start]description: "تطبيق سياحي تعريفي للمواقع الأثرية في الأردن"
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.2
+  # المكتبات المطلوبة لتشغيل الفيديو والأصوات 
+  video_player: ^2.8.1
+  audioplayers: ^5.2.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
+
+  # تعريف الملفات الخارجية (الصور والأصوات) 
+  assets:
+    - assets/images/petra.jpg
+    - assets/images/jerash.jpg
+    - assets/images/wadirum.jpg
+    - assets/images/citadel.jpg
+    - assets/images/theater.jpg
+    - [cite_start]assets/sounds/success.mp3   # صوت التشجيع للاختبار والتقييم 
+    - [cite_start]assets/sounds/correct.mp3   # نغمة الإجابة الصحيحة
