@@ -39,7 +39,7 @@ class MainScreen extends StatelessWidget {
   final List<Site> sites = [
     Site(
       name: "البتراء",
-      image: "https://images.unsplash.com/photo-1579606052847-e08553227c28",
+      image: "assets/images/petra.jpg",
       videoUrl:
           "https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4", // استبدال برابط فيديو البتراء
       description:
@@ -74,7 +74,7 @@ class MainScreen extends StatelessWidget {
     ),
     Site(
       name: "جرش",
-      image: "https://images.unsplash.com/photo-1548685904-743f508003f5",
+      image: "assets/images/jerash.jpg",
       videoUrl:
           "https://www.sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4",
       description:
@@ -109,7 +109,7 @@ class MainScreen extends StatelessWidget {
     ),
     Site(
       name: "وادي رم",
-      image: "https://images.unsplash.com/photo-1548685904-743f508003f5",
+      image: "assets/images/wadirum.jpg",
       videoUrl:
           "https://www.sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4",
       description:
@@ -144,7 +144,7 @@ class MainScreen extends StatelessWidget {
     ),
     Site(
       name: "المدرج الروماني",
-      image: "https://images.unsplash.com/photo-1548685904-743f508003f5",
+      image: "assets/images/theater.jpg",
       videoUrl:
           "https://www.sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4",
       description:
@@ -179,7 +179,7 @@ class MainScreen extends StatelessWidget {
     ),
     Site(
       name: "قلعة عمان ",
-      image: "https://images.unsplash.com/photo-1548685904-743f508003f5",
+      image: "assets/images/citadel.jpg",
       videoUrl:
           "https://www.sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4",
       description: "موقع اثري فوق احد جبال عمان ويضم آثار رومانية و اموية .",
@@ -229,7 +229,7 @@ class MainScreen extends StatelessWidget {
             elevation: 5,
             child: ListTile(
               contentPadding: EdgeInsets.all(10),
-              leading: Image.network(sites[index].image,
+              leading: Image.asset(sites[index].image,
                   width: 80, fit: BoxFit.cover),
               title: Text(sites[index].name,
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
@@ -270,8 +270,7 @@ class _SiteDetailsScreenState extends State<SiteDetailsScreen> {
     String message;
     if (_rating == 5) {
       message = "شكراً لتقييمك الرائع! 🌟";
-      await _audioPlayer.play(UrlSource(
-          'https://www.myinstants.com/media/sounds/crowd-cheer.mp3')); // صوت تشجيع
+      _audioPlayer.play(AssetSource('sounds/success.mp3')); // استخدام المصدر الصحيح للملفات المحلية بدون انتظار
     } else if (_rating <= 2) {
       message = "نعتذر منك، سنعمل على تحسين خدماتنا.";
     } else {
@@ -302,7 +301,7 @@ class _SiteDetailsScreenState extends State<SiteDetailsScreen> {
                           ? _videoController.pause()
                           : _videoController.play())),
             ]),
-            Image.network(widget.site.image,
+            Image.asset(widget.site.image,
                 height: 200, width: double.infinity, fit: BoxFit.cover),
             Padding(
                 padding: EdgeInsets.all(16),
@@ -358,11 +357,11 @@ class _QuizScreenState extends State<QuizScreen> {
   int score = 0;
   final AudioPlayer _quizPlayer = AudioPlayer();
 
-  void _checkAnswer(int index) async {
+  // تم إصلاح مشكلة عدم الانتقال للسؤال التالي عند الإجابة الصحيحة من خلال تحسين تشغيل الملفات الصوتية
+  void _checkAnswer(int index) {
     if (index == widget.quizData[currentQuestion]['a']) {
       score++;
-      await _quizPlayer.play(UrlSource(
-          'https://www.myinstants.com/media/sounds/correct.mp3')); // نغمة صحيحة
+      _quizPlayer.play(AssetSource('sounds/correct.mp3')); // تشغيل الصوت بدون انتظار لضمان استمرار اللعبة
     }
     if (currentQuestion < 4) {
       setState(() => currentQuestion++);
@@ -371,18 +370,40 @@ class _QuizScreenState extends State<QuizScreen> {
     }
   }
 
+  // تم تحديث منطق النتيجة: إذا كانت النتيجة 4 أو 5 يتم تشغيل صوت النجاح، وإذا كانت أقل يطلب من المستخدم المحاولة مرة أخرى ويعاد الاختبار
   void _showResult() {
-    showDialog(
-        context: context,
-        builder: (c) => AlertDialog(
-                title: Text("النتيجة النهائية"),
-                content: Text("لقد حصلت على $score من 5"),
-                actions: [
-                  TextButton(
-                      onPressed: () =>
-                          Navigator.popUntil(context, (r) => r.isFirst),
-                      child: Text("العودة للرئيسية"))
-                ]));
+    if (score >= 4) {
+      _quizPlayer.play(AssetSource('sounds/success.mp3')); // تشغيل صوت النجاح عند الحصول على نتيجة عالية
+      showDialog(
+          context: context,
+          builder: (c) => AlertDialog(
+                  title: Text("أحسنت! النتيجة النهائية"),
+                  content: Text("لقد حصلت على $score من 5. عمل رائع!"),
+                  actions: [
+                    TextButton(
+                        onPressed: () =>
+                            Navigator.popUntil(context, (r) => r.isFirst),
+                        child: Text("العودة للرئيسية"))
+                  ]));
+    } else {
+      showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (c) => AlertDialog(
+                  title: Text("حاول مرة أخرى"),
+                  content: Text("لقد حصلت على $score من 5. يجب أن تحصل على 4 إجابات صحيحة على الأقل للنجاح."),
+                  actions: [
+                    TextButton(
+                        onPressed: () {
+                          Navigator.pop(c);
+                          setState(() {
+                            currentQuestion = 0;
+                            score = 0;
+                          });
+                        },
+                        child: Text("إعادة الاختبار"))
+                  ]));
+    }
   }
 
   @override
