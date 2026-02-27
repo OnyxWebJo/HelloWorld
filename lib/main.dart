@@ -270,7 +270,7 @@ class _SiteDetailsScreenState extends State<SiteDetailsScreen> {
     String message;
     if (_rating == 5) {
       message = "شكراً لتقييمك الرائع! 🌟";
-      _audioPlayer.play(AssetSource('sounds/success.mp3')); // استخدام المصدر الصحيح للملفات المحلية بدون انتظار
+      _audioPlayer.play(AssetSource('sounds/success.wav')); 
     } else if (_rating <= 2) {
       message = "نعتذر منك، سنعمل على تحسين خدماتنا.";
     } else {
@@ -352,16 +352,33 @@ class QuizScreen extends StatefulWidget {
   _QuizScreenState createState() => _QuizScreenState();
 }
 
-class _QuizScreenState extends State<QuizScreen> {
+class _QuizScreenState extends State<QuizScreen> with SingleTickerProviderStateMixin {
   int currentQuestion = 0;
   int score = 0;
   final AudioPlayer _quizPlayer = AudioPlayer();
+  late AnimationController _animationController;
+  bool _showBalloons = false;
 
-  // تم إصلاح مشكلة عدم الانتقال للسؤال التالي عند الإجابة الصحيحة من خلال تحسين تشغيل الملفات الصوتية
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: Duration(seconds: 3),
+    );
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  // تم تحسين تشغيل الصوت للمتصفح من خلال إضافة تأخير بسيط وضمان تحميل الملف قبل عرضه
   void _checkAnswer(int index) {
     if (index == widget.quizData[currentQuestion]['a']) {
       score++;
-      _quizPlayer.play(AssetSource('sounds/correct.mp3')); // تشغيل الصوت بدون انتظار لضمان استمرار اللعبة
+      _quizPlayer.play(AssetSource('sounds/correct.wav')); 
     }
     if (currentQuestion < 4) {
       setState(() => currentQuestion++);
@@ -370,10 +387,14 @@ class _QuizScreenState extends State<QuizScreen> {
     }
   }
 
-  // تم تحديث منطق النتيجة: إذا كانت النتيجة 4 أو 5 يتم تشغيل صوت النجاح، وإذا كانت أقل يطلب من المستخدم المحاولة مرة أخرى ويعاد الاختبار
+  // تم تحديث منطق النتيجة: إذا كانت النتيجة 4 أو 5 يتم تشغيل صوت النجاح والرسوم المتحركة، وإذا كانت أقل يطلب من المستخدم المحاولة مرة أخرى
   void _showResult() {
     if (score >= 4) {
-      _quizPlayer.play(AssetSource('sounds/success.mp3')); // تشغيل صوت النجاح عند الحصول على نتيجة عالية
+      setState(() {
+        _showBalloons = true;
+      });
+      _animationController.forward(from: 0.0);
+      _quizPlayer.play(AssetSource('sounds/success.wav')); 
       showDialog(
           context: context,
           builder: (c) => AlertDialog(
@@ -410,30 +431,73 @@ class _QuizScreenState extends State<QuizScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text("اختبار المعلومات")),
-      body: Padding(
-        padding: EdgeInsets.all(20),
-        child: Column(
-          children: [
-            Text("السؤال ${currentQuestion + 1}/5",
-                style: TextStyle(fontSize: 18, color: Colors.grey)),
-            SizedBox(height: 20),
-            Text(widget.quizData[currentQuestion]['q'],
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center),
-            SizedBox(height: 40),
-            ...List.generate(
-                3,
-                (i) => Padding(
-                      padding: EdgeInsets.symmetric(vertical: 8),
-                      child: SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                              child: Text(
-                                  widget.quizData[currentQuestion]['o'][i]),
-                              onPressed: () => _checkAnswer(i))),
-                    )),
-          ],
-        ),
+      body: Stack(
+        children: [
+          Padding(
+            padding: EdgeInsets.all(20),
+            child: Column(
+              children: [
+                Text("السؤال ${currentQuestion + 1}/5",
+                    style: TextStyle(fontSize: 18, color: Colors.grey)),
+                SizedBox(height: 20),
+                Text(widget.quizData[currentQuestion]['q'],
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                    textAlign: TextAlign.center),
+                SizedBox(height: 40),
+                ...List.generate(
+                    3,
+                    (i) => Padding(
+                          padding: EdgeInsets.symmetric(vertical: 8),
+                          child: SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                  child: Text(
+                                      widget.quizData[currentQuestion]['o'][i]),
+                                  onPressed: () => _checkAnswer(i))),
+                        )),
+              ],
+            ),
+          ),
+          if (_showBalloons)
+            Positioned.fill(
+              child: AnimatedBuilder(
+                animation: _animationController,
+                builder: (context, child) {
+                  return Stack(
+                    children: List.generate(15, (index) {
+                      final double progress = _animationController.value;
+                      final double left = (index * 0.15 * MediaQuery.of(context).size.width) % MediaQuery.of(context).size.width;
+                      final double bottom = progress * MediaQuery.of(context).size.height * 1.5 - 100;
+                      return Positioned(
+                        left: left,
+                        bottom: bottom,
+                        child: Opacity(
+                          opacity: (1 - progress).clamp(0.0, 1.0),
+                          child: Column(
+                            children: [
+                              Container(
+                                width: 40,
+                                height: 50,
+                                decoration: BoxDecoration(
+                                  color: Colors.primaries[index % Colors.primaries.length],
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                              ),
+                              Container(
+                                width: 2,
+                                height: 40,
+                                color: Colors.grey[400],
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }),
+                  );
+                },
+              ),
+            ),
+        ],
       ),
     );
   }

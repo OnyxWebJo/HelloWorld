@@ -30,5 +30,5 @@ flutter:
     - assets/images/wadirum.jpg
     - assets/images/citadel.jpg
     - assets/images/theater.jpg
-    - assets/sounds/success.mp3   # صوت التشجيع للاختبار والتقييم 
-    - assets/sounds/correct.mp3   # نغمة الإجابة الصحيحة
+    - assets/sounds/success.wav   # صوت التشجيع للاختبار والتقييم 
+    - assets/sounds/correct.wav   # نغمة الإجابة الصحيحة
