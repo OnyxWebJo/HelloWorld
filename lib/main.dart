@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:video_player/video_player.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:youtube_player_iframe/youtube_player_iframe.dart'; // مكتبة تشغيل يوتيوب
 
 void main() => runApp(JordanTourismApp());
 
@@ -40,8 +40,7 @@ class MainScreen extends StatelessWidget {
     Site(
       name: "البتراء",
       image: "assets/images/petra.jpg",
-      videoUrl:
-          "https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4", // استبدال برابط فيديو البتراء
+      videoUrl: "https://youtube.com/shorts/atLeewgvmzE?si=GM8n-pSZMxYYrFHl", 
       description:
           "المدينة الوردية، منحوتة في الصخر من قبل الأنباط وتعد من عجائب الدنيا السبع.",
       quiz: [
@@ -75,8 +74,7 @@ class MainScreen extends StatelessWidget {
     Site(
       name: "جرش",
       image: "assets/images/jerash.jpg",
-      videoUrl:
-          "https://www.sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4",
+      videoUrl: "https://youtube.com/shorts/5lJH3q3UpKg?si=fVUqiA63AlrptV4z", 
       description:
           "مدينة الألف عمود، وهي واحدة من مدن الديكابولس العشر وأفضلها حفظاً.",
       quiz: [
@@ -97,23 +95,22 @@ class MainScreen extends StatelessWidget {
         },
         {
           'q': 'ما هو المهرجان السنوي المشهور فيها؟',
-          'o': ['مهرجان جرش', 'مهرجان عمان', 'مهرجان الفحيص'],
-          'a': 0
+          'o': ['مهرجان الفحيص', 'مهرجان جرش', 'مهرجان شبيب'],
+          'a': 1
         },
         {
-          'q': 'أين تقع جرش بالنسبة لعمان؟',
-          'o': ['الجنوب', 'الشمال', 'الغرب'],
-          'a': 1
+          'q': 'أين تقع مدينة جرش؟',
+          'o': ['شمال الأردن', 'جنوب الأردن', 'شرق الأردن'],
+          'a': 0
         },
       ],
     ),
     Site(
       name: "وادي رم",
       image: "assets/images/wadirum.jpg",
-      videoUrl:
-          "https://www.sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4",
+      videoUrl: "https://www.youtube.com/shorts/h9O24ZBHOMU", 
       description:
-          "صحراء سياحية في جنوب الاردن , وهي مشهورة بجبالها الصخرية و رحلات التخييم فيها .",
+          "وادي القمر، يشتهر بجباله الرملية الشاهقة وتشكيلاته الصخرية الفريدة.",
       quiz: [
         {
           'q': 'اين يقع وادي رم ؟',
@@ -133,7 +130,7 @@ class MainScreen extends StatelessWidget {
         {
           'q': 'ما اشهر نشاط سياحي في وادي رم وهو الاكثر شهرة ؟',
           'o': ['الغوص', 'التزلج على الجليد', 'رحلات الجيب و التخييم الصحراوي'],
-          'a': 0
+          'a': 2
         },
         {
           'q': 'ادرج وادي رم على قائمة التراث العالمي لليونسكو في عام :',
@@ -145,15 +142,13 @@ class MainScreen extends StatelessWidget {
     Site(
       name: "المدرج الروماني",
       image: "assets/images/theater.jpg",
-      videoUrl:
-          "https://www.sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4",
-      description:
-          "مسرح اثري في عمان بني في العصر الروماني للعروض و الفعاليات .",
+      videoUrl: "https://www.youtube.com/shorts/Fhf_5t5JIXA", 
+      description: "مدرج كبير يقع في قلب العاصمة عمان ويعود للعصر الروماني.",
       quiz: [
         {
           'q': 'اين يقع المدرج الروماني ؟',
           'o': ['الزرقاء', 'العقبة', 'عمان'],
-          'a': 0
+          'a': 2
         },
         {
           'q': 'في اي فترة تم بناء المدرج الروماني ',
@@ -178,11 +173,10 @@ class MainScreen extends StatelessWidget {
       ],
     ),
     Site(
-      name: "قلعة عمان ",
+      name: "قلعة عمان",
       image: "assets/images/citadel.jpg",
-      videoUrl:
-          "https://www.sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4",
-      description: "موقع اثري فوق احد جبال عمان ويضم آثار رومانية و اموية .",
+      videoUrl: "https://www.youtube.com/shorts/KwLy5hAjTpY", 
+      description: "موقع أثري فوق أحد جبال عمان ويضم آثاراً رومانية وأموية.",
       quiz: [
         {
           'q': 'اين تقع قلعة عمان ؟',
@@ -255,15 +249,31 @@ class SiteDetailsScreen extends StatefulWidget {
 }
 
 class _SiteDetailsScreenState extends State<SiteDetailsScreen> {
-  late VideoPlayerController _videoController;
+  late YoutubePlayerController _youtubeController;
   final AudioPlayer _audioPlayer = AudioPlayer();
   double _rating = 0;
 
   @override
   void initState() {
     super.initState();
-    _videoController = VideoPlayerController.network(widget.site.videoUrl)
-      ..initialize().then((_) => setState(() {}));
+    // استخراج معرف الفيديو من الرابط
+    final String? videoId = YoutubePlayerController.convertUrlToId(widget.site.videoUrl);
+    
+    _youtubeController = YoutubePlayerController.fromVideoId(
+      videoId: videoId ?? '',
+      autoPlay: false,
+      params: const YoutubePlayerParams(
+        showControls: true,
+        showFullscreenButton: true,
+        mute: false,
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _youtubeController.close(); // تنظيف الموارد
+    super.dispose();
   }
 
   void _submitRating() async {
@@ -287,20 +297,11 @@ class _SiteDetailsScreenState extends State<SiteDetailsScreen> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            if (_videoController.value.isInitialized)
-              AspectRatio(
-                  aspectRatio: _videoController.value.aspectRatio,
-                  child: VideoPlayer(_videoController)),
-            Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-              IconButton(
-                  icon: Icon(_videoController.value.isPlaying
-                      ? Icons.pause
-                      : Icons.play_arrow),
-                  onPressed: () => setState(() =>
-                      _videoController.value.isPlaying
-                          ? _videoController.pause()
-                          : _videoController.play())),
-            ]),
+            // عرض مشغل يوتيوب
+            YoutubePlayer(
+              controller: _youtubeController,
+              aspectRatio: 16 / 9,
+            ),
             Image.asset(widget.site.image,
                 height: 200, width: double.infinity, fit: BoxFit.cover),
             Padding(
